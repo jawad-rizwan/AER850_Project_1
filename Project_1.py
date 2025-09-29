@@ -90,8 +90,19 @@ print(data.describe())
 # Compute and plot the correlation matrix
 corr_matrix = data.corr()
 plt.figure(figsize=(10, 8))
-sns.heatmap(np.abs(corr_matrix))
-plt.title('Correlation Matrix (Location and Steps)')
+sns.heatmap(corr_matrix, 
+            annot=True,          # Show correlation values on plot
+            fmt='.3f',           # 3 decimal places
+            cmap='coolwarm',     # Red-blue color scheme
+            center=0,            # Center at 0git 
+            square=True,         # Square cells
+            linewidths=1,        # Grid lines
+            cbar_kws={'label': 'Pearson Correlation Coefficient'})
+
+plt.title('Correlation Matrix (Coordinates vs Maintenance Steps)', 
+          fontsize=14, fontweight='bold')
+plt.tight_layout()
+plt.show(block=False)
 
 ##########################################################
 # STEP 4: Classification Model Development/Engineering 
