@@ -3,6 +3,7 @@ import os
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import seaborn as sns
 
 # Force the use of xcb platform for Qt (I'm using Linux and wayland doesn't seem to work for me)
 os.environ["QT_QPA_PLATFORM"] = "xcb"
@@ -82,6 +83,22 @@ plt.tight_layout()
 # Displaying statistical analysis of dataframe
 print(data.describe())
 
+##########################################################
+# STEP 3: Correlation Analysis 
+##########################################################
+
+# Compute and plot the correlation matrix
+corr_matrix = data.corr()
+plt.figure(figsize=(10, 8))
+sns.heatmap(np.abs(corr_matrix))
+plt.title('Correlation Matrix (Location and Steps)')
+
+##########################################################
+# STEP 4: Classification Model Development/Engineering 
+##########################################################
+
 # Show all figures at once
 plt.show()
+
+
 
