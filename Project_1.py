@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+from sklearn.model_selection import train_test_split
 
 # Force the use of xcb platform for Qt (I'm using Linux and wayland doesn't seem to work for me)
 os.environ["QT_QPA_PLATFORM"] = "xcb"
@@ -107,6 +108,18 @@ plt.show(block=False)
 ##########################################################
 # STEP 4: Classification Model Development/Engineering 
 ##########################################################
+
+# Separate features (X, Y, Z) and target (Step)
+features = data[['X', 'Y', 'Z']]
+target = data['Step']
+
+# Split data into training (80%) and testing (20%) sets
+features_train, features_test, target_train, target_test = train_test_split(
+    features, target,
+    test_size=0.2,      # 20% for testing
+    random_state=42,    # For reproducibility
+    stratify=target     # Keep same proportion of each step in train/test
+)
 
 # Show all figures at once
 plt.show()
