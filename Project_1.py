@@ -160,6 +160,7 @@ start_time = time.time()
 grid_lr.fit(features_train, target_train)
 lr_time = time.time() - start_time
 
+# Confirmation message
 print(f"\n✓ Training complete!")
 print(f"Training Time: {lr_time:.2f} seconds\n")
 
@@ -196,8 +197,48 @@ start_time = time.time()
 grid_svm.fit(features_train, target_train)
 svm_time = time.time() - start_time
 
+# Confirmation message
 print(f"\n✓ Training complete!")
 print(f"Training Time: {svm_time:.2f} seconds\n")
+
+# ==================== MODEL 3: RANDOM FOREST (GridSearchCV) ====================
+
+# Create pipeline for Random Forest
+pipeline_rf = Pipeline([
+    ('scaler', StandardScaler()),
+    ('model', RandomForestClassifier(random_state=42))
+])
+
+# Define hyperparameter grid for Random Forest
+param_grid_rf = {
+    'model__n_estimators': [50, 100, 200],
+    'model__max_depth': [None, 10, 20, 30],
+    'model__min_samples_split': [2, 5, 10],
+    'model__min_samples_leaf': [1, 2, 4],
+    'model__max_features': ['sqrt', 'log2']
+}
+
+# GridSearchCV for Random Forest with 5-fold cross-validation
+grid_rf = GridSearchCV(
+    estimator=pipeline_rf,
+    param_grid=param_grid_rf,
+    cv=5,
+    scoring='accuracy',
+    n_jobs=-1,
+    refit=True,
+    verbose=1,
+    return_train_score=True
+)
+
+# Train the model
+print("\nTraining Random Forest with GridSearchCV...")
+start_time = time.time()
+grid_rf.fit(features_train, target_train)
+rf_time = time.time() - start_time
+
+# Confirmation message
+print(f"\n✓ Training complete!")
+print(f"Training Time: {rf_time:.2f} seconds\n")
 
 # Show all figures at once
 plt.show()
