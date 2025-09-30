@@ -142,7 +142,7 @@ param_grid_lr = {
     'model__penalty': ['l2']
 }
 
-# GridSearchCV with 5-fold cross-validation
+# GridSearchCV for Logistic Regression with 5-fold cross-validation
 grid_lr = GridSearchCV(
     estimator=pipeline_lr,
     param_grid=param_grid_lr,
@@ -162,6 +162,42 @@ lr_time = time.time() - start_time
 
 print(f"\n✓ Training complete!")
 print(f"Training Time: {lr_time:.2f} seconds\n")
+
+# ==================== MODEL 2: SUPPORT VECTOR MACHINE (GridSearchCV) ====================
+
+# Create pipeline for SVM
+pipeline_svm = Pipeline([
+    ('scaler', StandardScaler()),
+    ('model', SVC(random_state=42))
+])
+
+# Define hyperparameter grid for SVM
+param_grid_svm = {
+    'model__C': [0.1, 1, 10, 100],
+    'model__kernel': ['linear', 'rbf', 'poly'],
+    'model__gamma': ['scale', 'auto']
+}
+
+# GridSearchCV for SVM with 5-fold cross-validation
+grid_svm = GridSearchCV(
+    estimator=pipeline_svm,
+    param_grid=param_grid_svm,
+    cv=5,
+    scoring='accuracy',
+    n_jobs=-1,
+    refit=True,
+    verbose=1,
+    return_train_score=True
+)
+
+# Train the model
+print("\nTraining SVM with GridSearchCV...")
+start_time = time.time()
+grid_svm.fit(features_train, target_train)
+svm_time = time.time() - start_time
+
+print(f"\n✓ Training complete!")
+print(f"Training Time: {svm_time:.2f} seconds\n")
 
 # Show all figures at once
 plt.show()
