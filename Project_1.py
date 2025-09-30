@@ -4,7 +4,13 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, GridSearchCV, RandomizedSearchCV
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.svm import SVC
+from sklearn.linear_model import LogisticRegression
+from sklearn.preprocessing import StandardScaler
+from sklearn.pipeline import Pipeline
+import time
 
 # Force the use of xcb platform for Qt (I'm using Linux and wayland doesn't seem to work for me)
 os.environ["QT_QPA_PLATFORM"] = "xcb"
@@ -117,9 +123,45 @@ target = data['Step']
 features_train, features_test, target_train, target_test = train_test_split(
     features, target,
     test_size=0.2,      # 20% for testing
-    random_state=42,    # For reproducibility
+    random_state=42,    
     stratify=target     # Keep same proportion of each step in train/test
 )
+
+# ==================== MODEL 1: LOGISTIC REGRESSION (GridSearchCV) ====================
+
+# Create pipeline for Logistic Regression
+pipeline_lr = Pipeline([
+    ('scaler', StandardScaler()),
+    ('model', LogisticRegression(random_state=42, max_iter=1000, multi_class='multinomial'))
+])
+
+# Define hyperparameter grid for Logistic Regression
+param_grid_lr = {
+    'model__C': [0.01, 0.1, 1, 10, 100],
+    'model__solver': ['lbfgs', 'saga'],
+    'model__penalty': ['l2']
+}
+
+# GridSearchCV with 5-fold cross-validation
+grid_lr = GridSearchCV(
+    estimator=pipeline_lr,
+    param_grid=param_grid_lr,
+    cv=5,                           
+    scoring='accuracy',             
+    n_jobs=-1,                      
+    refit=True,                     
+    verbose=1,
+    return_train_score=True
+)
+
+# Train the model
+print("\nTraining Logistic Regression with GridSearchCV...")
+start_time = time.time()
+grid_lr.fit(features_train, target_train)
+lr_time = time.time() - start_time
+
+print(f"\n✓ Training complete!")
+print(f"Training Time: {lr_time:.2f} seconds\n")
 
 # Show all figures at once
 plt.show()
