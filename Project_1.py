@@ -162,6 +162,8 @@ lr_time = time.time() - start_time
 
 # Confirmation message
 print(f"\n✓ Training complete!")
+print(f"Best Score: {grid_lr.best_score_:.4f}")
+print(f"Best Parameters: {grid_lr.best_params_}")
 print(f"Training Time: {lr_time:.2f} seconds\n")
 
 # ==================== MODEL 2: SUPPORT VECTOR MACHINE (GridSearchCV) ====================
@@ -199,6 +201,8 @@ svm_time = time.time() - start_time
 
 # Confirmation message
 print(f"\n✓ Training complete!")
+print(f"Best Score: {grid_svm.best_score_:.4f}")
+print(f"Best Parameters: {grid_svm.best_params_}")
 print(f"Training Time: {svm_time:.2f} seconds\n")
 
 # ==================== MODEL 3: RANDOM FOREST (GridSearchCV) ====================
@@ -238,7 +242,54 @@ rf_time = time.time() - start_time
 
 # Confirmation message
 print(f"\n✓ Training complete!")
+print(f"Best Score: {grid_rf.best_score_:.4f}")
+print(f"Best Parameters: {grid_rf.best_params_}")
 print(f"Training Time: {rf_time:.2f} seconds\n")
+
+# ==================== MODEL 4: RANDOM FOREST (RandomizedSearchCV) ====================
+
+# Create pipeline for Random Forest with RandomizedSearchCV
+pipeline_rf_random = Pipeline([
+    ('scaler', StandardScaler()),
+    ('model', RandomForestClassifier(random_state=42))
+])
+
+# Define hyperparameter distributions for Random Forest with RandomizedSearchCV
+param_dist_rf = {
+    'model__n_estimators': [50, 100, 150, 200, 250, 300],
+    'model__max_depth': [None, 5, 10, 15, 20, 25, 30],
+    'model__min_samples_split': [2, 5, 10, 15],
+    'model__min_samples_leaf': [1, 2, 4, 6, 8],
+    'model__max_features': ['sqrt', 'log2', None]
+}
+
+# RandomizedSearchCV
+random_rf = RandomizedSearchCV(
+    estimator=pipeline_rf_random,
+    param_distributions=param_dist_rf,
+    n_iter=50,                      
+    cv=5,
+    scoring='accuracy',
+    n_jobs=-1,
+    random_state=42,
+    refit=True,
+    verbose=1,
+    return_train_score=True
+)
+
+# Train the model
+print("\nTraining Random Forest with RandomizedSearchCV...")
+start_time = time.time()
+random_rf.fit(features_train, target_train)
+rf_random_time = time.time() - start_time
+
+# Confirmation message
+print(f"\n✓ Training complete!")
+print(f"Best Score: {random_rf.best_score_:.4f}")
+print(f"Best Parameters: {random_rf.best_params_}")
+print(f"Training Time: {rf_random_time:.2f} seconds\n")
+
+print("\n✓ All models trained successfully!")
 
 # Show all figures at once
 plt.show()
