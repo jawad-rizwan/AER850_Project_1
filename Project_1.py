@@ -13,6 +13,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import Pipeline
 from sklearn.metrics import (accuracy_score, precision_score, f1_score, 
                              confusion_matrix, classification_report)
+from sklearn.ensemble import StackingClassifier
 import time
 
 # Force the use of xcb platform for Qt (I'm using Linux and wayland doesn't seem to work for me)
@@ -26,6 +27,10 @@ plt.close('all')
 # STEP 1: Data Processing
 ##########################################################
 
+print("="*70)
+print("STEP 1: Data Processing")
+print("="*70)
+
 # Import the data
 data = pd.read_csv("Project 1 Data.csv")
 
@@ -35,6 +40,10 @@ print(data.info())
 ##########################################################
 # STEP 2: Data Visualization
 ##########################################################
+
+print("="*70)
+print("STEP 2: Data Visualization ")
+print("="*70)
 
 # Create 3D plot of the data
 DataVivPicture = plt.figure()
@@ -97,6 +106,10 @@ print(data.describe())
 # STEP 3: Correlation Analysis 
 ##########################################################
 
+print("="*70)
+print("STEP 3: Correlation Analysis ")
+print("="*70)
+
 # Compute and plot the correlation matrix
 corr_matrix = data.corr()
 plt.figure(figsize=(10, 8))
@@ -112,11 +125,14 @@ sns.heatmap(corr_matrix,
 plt.title('Correlation Matrix (Coordinates vs Maintenance Steps)', 
           fontsize=14, fontweight='bold')
 plt.tight_layout()
-plt.show(block=False)
 
 ##########################################################
 # STEP 4: Classification Model Development/Engineering 
 ##########################################################
+
+print("="*70)
+print("STEP 4: Classification Model Development/Engineering ")
+print("="*70)
 
 # Separate features (X, Y, Z) and target (Step)
 features = data[['X', 'Y', 'Z']]
@@ -299,6 +315,10 @@ print("\n✓ All models trained successfully!")
 # STEP 5: Model Performance Analysis
 ##########################################################
 
+print("="*70)
+print("STEP 5: Model Performance Analysis")
+print("="*70)
+
 # Dictionary to store all results
 results = {}
 
@@ -394,23 +414,11 @@ print(classification_report(target_test, best_predictions,
 # STEP 6: Stacked Model Performance Analysis 
 ##########################################################
 
-from sklearn.ensemble import StackingClassifier
-from sklearn.metrics import accuracy_score, precision_score, f1_score, confusion_matrix
-import matplotlib.pyplot as plt
-import seaborn as sns
-
 print("="*70)
 print("STEP 6: STACKED MODEL PERFORMANCE ANALYSIS")
 print("="*70)
 
-print("\n[Step 6.1] Creating stacked model by combining two best models...\n")
-
-# Select the two best performing models from Step 5
-# Based on typical performance, we'll combine Gradient Boosting and Random Forest
-# You can change these based on your Step 5 results
-
 # Create stacking classifier
-# The final_estimator makes the final prediction based on the base models' outputs
 stacked_model = StackingClassifier(
     estimators=[
         ('gradient_boosting', grid_gbm.best_estimator_),
@@ -427,16 +435,15 @@ stacked_model.fit(features_train, target_train)
 stacked_time = time.time() - start_time
 print(f"✓ Training complete! Time: {stacked_time:.2f} seconds\n")
 
-print("[Step 6.2] Evaluating stacked model performance...\n")
-
 # Make predictions with the stacked model
-y_pred_stacked = stacked_model.predict(features_test)
+target_pred_stacked = stacked_model.predict(features_test)
 
 # Calculate metrics for stacked model
-stacked_accuracy = accuracy_score(target_test, y_pred_stacked)
-stacked_precision = precision_score(target_test, y_pred_stacked, average='weighted')
-stacked_f1 = f1_score(target_test, y_pred_stacked, average='weighted')
+stacked_accuracy = accuracy_score(target_test, target_pred_stacked)
+stacked_precision = precision_score(target_test, target_pred_stacked, average='weighted')
+stacked_f1 = f1_score(target_test, target_pred_stacked, average='weighted')
 
+# Print stacked model performance
 print("="*70)
 print("STACKED MODEL PERFORMANCE")
 print("="*70)
@@ -445,55 +452,8 @@ print(f"Precision: {stacked_precision:.4f}")
 print(f"F1-Score:  {stacked_f1:.4f}")
 print("="*70)
 
-# Get individual model performances for comparison
-gbm_accuracy = accuracy_score(target_test, grid_gbm.predict(features_test))
-rf_accuracy = accuracy_score(target_test, grid_rf.predict(features_test))
-
-print("\n[Step 6.3] Comparing stacked model to individual models...\n")
-
-print("="*70)
-print("PERFORMANCE COMPARISON")
-print("="*70)
-print(f"Gradient Boosting (Individual):  {gbm_accuracy:.4f}")
-print(f"Random Forest (Individual):      {rf_accuracy:.4f}")
-print(f"Stacked Model (Combined):        {stacked_accuracy:.4f}")
-print("="*70)
-
-# Calculate improvement
-best_individual = max(gbm_accuracy, rf_accuracy)
-improvement = stacked_accuracy - best_individual
-improvement_pct = (improvement / best_individual) * 100
-
-print(f"\nImprovement over best individual model: {improvement:+.4f} ({improvement_pct:+.2f}%)")
-
-# Create comparison visualization
-plt.figure(figsize=(12, 6))
-
-models_comparison = ['Gradient Boosting', 'Random Forest', 'Stacked Model']
-accuracies = [gbm_accuracy, rf_accuracy, stacked_accuracy]
-colors = ['steelblue', 'steelblue', 'green' if stacked_accuracy > best_individual else 'orange']
-
-bars = plt.bar(models_comparison, accuracies, color=colors, edgecolor='black', alpha=0.7, width=0.6)
-
-# Add value labels on bars
-for bar in bars:
-    height = bar.get_height()
-    plt.text(bar.get_x() + bar.get_width()/2., height,
-             f'{height:.4f}',
-             ha='center', va='bottom', fontsize=12, fontweight='bold')
-
-plt.ylabel('Accuracy', fontsize=12)
-plt.title('Stacked Model vs Individual Models Performance', fontsize=14, fontweight='bold')
-plt.ylim(min(accuracies) - 0.05, 1.0)
-plt.grid(axis='y', alpha=0.3)
-plt.tight_layout()
-plt.savefig('step6_stacked_comparison.png', dpi=300, bbox_inches='tight')
-print("\n✓ Comparison chart saved: step6_stacked_comparison.png")
-
-print("\n[Step 6.4] Creating confusion matrix for stacked model...\n")
-
 # Calculate confusion matrix
-cm_stacked = confusion_matrix(target_test, y_pred_stacked)
+cm_stacked = confusion_matrix(target_test, target_pred_stacked)
 
 # Create confusion matrix plot
 plt.figure(figsize=(12, 10))
@@ -507,86 +467,8 @@ plt.ylabel('Actual Step', fontsize=12, fontweight='bold')
 plt.title(f'Confusion Matrix: Stacked Model\nAccuracy: {stacked_accuracy:.4f}', 
           fontsize=14, fontweight='bold', pad=20)
 plt.tight_layout()
-plt.savefig('step6_stacked_confusion_matrix.png', dpi=300, bbox_inches='tight')
-print("✓ Confusion matrix saved: step6_stacked_confusion_matrix.png")
 
-print("\n[Step 6.5] Detailed metrics comparison...\n")
-
-# Create detailed comparison table
-comparison_data = {
-    'Model': ['Gradient Boosting', 'Random Forest', 'Stacked Model'],
-    'Accuracy': [
-        accuracy_score(target_test, grid_gbm.predict(features_test)),
-        accuracy_score(target_test, grid_rf.predict(features_test)),
-        stacked_accuracy
-    ],
-    'Precision': [
-        precision_score(target_test, grid_gbm.predict(features_test), average='weighted'),
-        precision_score(target_test, grid_rf.predict(features_test), average='weighted'),
-        stacked_precision
-    ],
-    'F1-Score': [
-        f1_score(target_test, grid_gbm.predict(features_test), average='weighted'),
-        f1_score(target_test, grid_rf.predict(features_test), average='weighted'),
-        stacked_f1
-    ]
-}
-
-print("="*70)
-print("DETAILED METRICS COMPARISON")
-print("="*70)
-print(f"{'Model':<25} {'Accuracy':<15} {'Precision':<15} {'F1-Score':<15}")
-print("-"*70)
-for i in range(len(comparison_data['Model'])):
-    print(f"{comparison_data['Model'][i]:<25} "
-          f"{comparison_data['Accuracy'][i]:<15.4f} "
-          f"{comparison_data['Precision'][i]:<15.4f} "
-          f"{comparison_data['F1-Score'][i]:<15.4f}")
-print("="*70)
-
-print("\n[Step 6.6] Analysis and interpretation...\n")
-
-print("="*70)
-print("STACKING ANALYSIS")
-print("="*70)
-
-if improvement > 0.01:  # Significant improvement (>1%)
-    print("\n✓ SIGNIFICANT IMPROVEMENT OBSERVED")
-    print("\nThe stacked model shows meaningful improvement over individual models.")
-    print("\nPossible reasons for improvement:")
-    print("1. Complementary Strengths: The two models may excel at different")
-    print("   maintenance steps or coordinate regions, and stacking combines their")
-    print("   expertise effectively.")
-    print("\n2. Error Diversity: When individual models make different types of")
-    print("   mistakes, the meta-learner can learn to trust the correct predictions")
-    print("   and ignore the errors.")
-    print("\n3. Pattern Complexity: The combination captures both the tree-based")
-    print("   patterns from Random Forest and the sequential learning from")
-    print("   Gradient Boosting, providing a more robust classification.")
-    
-elif improvement > 0:  # Minimal improvement
-    print("\n≈ MINIMAL IMPROVEMENT OBSERVED")
-    print("\nThe stacked model shows slight improvement, but the gain is marginal.")
-    print("\nPossible reasons for limited effectiveness:")
-    print("1. High Individual Performance: Both base models already achieve")
-    print("   excellent accuracy, leaving little room for improvement.")
-    print("\n2. Similar Predictions: The two models may be making very similar")
-    print("   predictions, providing little diversity for the meta-learner to")
-    print("   exploit.")
-    print("\n3. Simple Problem: The maintenance step classification may be")
-    print("   straightforward enough that a single well-tuned model is sufficient.")
-    
-else:  # No improvement or worse
-    print("\n⚠ NO IMPROVEMENT OR SLIGHT DEGRADATION")
-    print("\nThe stacked model does not outperform the best individual model.")
-    print("\nPossible reasons:")
-    print("1. Overfitting in Meta-Learner: The final estimator may be overfitting")
-    print("   to the training predictions.")
-    print("\n2. Redundant Information: Both base models capture the same patterns,")
-    print("   so stacking adds complexity without benefit.")
-    print("\n3. Small Dataset: Limited test data may not provide enough evidence")
-    print("   for the meta-learner to learn effective combination strategies.")
-
-print("\n" + "="*70)
-print("✓ Step 6 Complete! Stacked model analysis finished.")
-print("="*70)
+# Show all figures at once
+plt.show(block=False)
+input("Press Enter to exit and close all plots...")
+plt.close('all')
