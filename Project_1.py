@@ -4,17 +4,18 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+import joblib
+import time
 from sklearn.model_selection import train_test_split, GridSearchCV, RandomizedSearchCV
+from sklearn.preprocessing import StandardScaler
+from sklearn.pipeline import Pipeline
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.svm import SVC
 from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.linear_model import LogisticRegression
-from sklearn.preprocessing import StandardScaler
-from sklearn.pipeline import Pipeline
 from sklearn.metrics import (accuracy_score, precision_score, f1_score, 
                              confusion_matrix, classification_report)
 from sklearn.ensemble import StackingClassifier
-import time
 
 # Force the use of xcb platform for Qt (I'm using Linux and wayland doesn't seem to work for me)
 os.environ["QT_QPA_PLATFORM"] = "xcb"
@@ -105,10 +106,6 @@ print(data.describe())
 ##########################################################
 # STEP 3: Correlation Analysis 
 ##########################################################
-
-print("="*70)
-print("STEP 3: Correlation Analysis ")
-print("="*70)
 
 # Compute and plot the correlation matrix
 corr_matrix = data.corr()
@@ -468,7 +465,36 @@ plt.title(f'Confusion Matrix: Stacked Model\nAccuracy: {stacked_accuracy:.4f}',
           fontsize=14, fontweight='bold', pad=20)
 plt.tight_layout()
 
+##########################################################
+# STEP 7:  Model Evaluation 
+##########################################################
+
+print("="*70)
+print("STEP 7: Model Evaluation ")
+print("="*70)
+
+# Package the stacked model 
+joblib.dump(stacked_model, 'stacked_model.joblib')
+loaded_model = joblib.load('stacked_model.joblib')
+
+# Coordinates for evaluation
+Eval_Coordinates = [
+                [9.375, 3.0625, 1.51],
+                [6.995, 5.125, 0.3875],
+                [0, 3.0625, 1.93],
+                [9.4, 3, 1.8],
+                [9.4, 3, 1.3]
+]
+
+# Predict maintenance steps for the given coordinates
+coordinates_df = pd.DataFrame(Eval_Coordinates, columns=['X', 'Y', 'Z'])
+predictions = loaded_model.predict(coordinates_df)
+results_df = coordinates_df.copy()
+results_df['Predicted Step'] = predictions
+print("\nPredictions for the given coordinates:")
+print(results_df.to_string(index=False))
+
 # Show all figures at once
 plt.show(block=False)
-input("Press Enter to exit and close all plots...")
+input("\nPress Enter to exit and close all plots...")
 plt.close('all')
