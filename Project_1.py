@@ -10,6 +10,8 @@ from sklearn.svm import SVC
 from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import Pipeline
+from sklearn.metrics import (accuracy_score, precision_score, f1_score, 
+                             confusion_matrix, classification_report)
 import time
 
 # Force the use of xcb platform for Qt (I'm using Linux and wayland doesn't seem to work for me)
@@ -132,7 +134,7 @@ features_train, features_test, target_train, target_test = train_test_split(
 # Create pipeline for Logistic Regression
 pipeline_lr = Pipeline([
     ('scaler', StandardScaler()),
-    ('model', LogisticRegression(random_state=42, max_iter=1000, multi_class='multinomial'))
+    ('model', LogisticRegression(random_state=42, max_iter=1000))
 ])
 
 # Define hyperparameter grid for Logistic Regression
@@ -148,7 +150,7 @@ grid_lr = GridSearchCV(
     param_grid=param_grid_lr,
     cv=5,                           
     scoring='accuracy',             
-    n_jobs=-1,                      
+    n_jobs=-1,                      # Use all available cores for parallel processing
     refit=True,                     
     verbose=1,
     return_train_score=True
@@ -166,6 +168,7 @@ print(f"Best Score: {grid_lr.best_score_:.4f}")
 print(f"Best Parameters: {grid_lr.best_params_}")
 print(f"Training Time: {lr_time:.2f} seconds\n")
 
+
 # ==================== MODEL 2: SUPPORT VECTOR MACHINE (GridSearchCV) ====================
 
 # Create pipeline for SVM
@@ -176,7 +179,7 @@ pipeline_svm = Pipeline([
 
 # Define hyperparameter grid for SVM
 param_grid_svm = {
-    'model__C': [0.1, 1, 10, 100],
+    'model__C': [0.1, 1, 10],
     'model__kernel': ['linear', 'rbf', 'poly'],
     'model__gamma': ['scale', 'auto']
 }
@@ -194,7 +197,7 @@ grid_svm = GridSearchCV(
 )
 
 # Train the model
-print("\nTraining SVM with GridSearchCV...")
+print("\nTraining Support Vector Machine with GridSearchCV...")
 start_time = time.time()
 grid_svm.fit(features_train, target_train)
 svm_time = time.time() - start_time
@@ -228,7 +231,7 @@ grid_rf = GridSearchCV(
     param_grid=param_grid_rf,
     cv=5,
     scoring='accuracy',
-    n_jobs=-1,
+    n_jobs=-1,                     
     refit=True,
     verbose=1,
     return_train_score=True
@@ -270,7 +273,7 @@ random_rf = RandomizedSearchCV(
     n_iter=50,                      
     cv=5,
     scoring='accuracy',
-    n_jobs=-1,
+    n_jobs=-1,                      # Use all available cores for parallel processing
     random_state=42,
     refit=True,
     verbose=1,
@@ -291,8 +294,104 @@ print(f"Training Time: {rf_random_time:.2f} seconds\n")
 
 print("\n✓ All models trained successfully!")
 
+##########################################################
+# STEP 5: Model Performance Analysis  
+##########################################################
+
+# Dictionary to store all results
+results = {}
+
+# Model 1: Logistic Regression
+print("Evaluating Model 1: Logistic Regression...")
+target_pred_lr = grid_lr.predict(features_test)
+results['Logistic Regression'] = {
+    'predictions': target_pred_lr,
+    'accuracy': accuracy_score(target_test, target_pred_lr),
+    'precision': precision_score(target_test, target_pred_lr, average='weighted'),
+    'f1_score': f1_score(target_test, target_pred_lr, average='weighted')
+}
+
+# Model 2: Support Vector Machine (SVM)
+print("Evaluating Model 2: Support Vector Machine (SVM)...")
+target_pred_svm = grid_svm.predict(features_test)
+results['Support Vector Machine (SVM)'] = {
+    'predictions': target_pred_svm,
+    'accuracy': accuracy_score(target_test, target_pred_svm),
+    'precision': precision_score(target_test, target_pred_svm, average='weighted'),
+    'f1_score': f1_score(target_test, target_pred_svm, average='weighted')
+}
+
+# Model 3: Random Forest (GridSearchCV)
+print("Evaluating Model 3: Random Forest (GridSearchCV)...")
+target_pred_rf = grid_rf.predict(features_test)
+results['Random Forest (Grid)'] = {
+    'predictions': target_pred_rf,
+    'accuracy': accuracy_score(target_test, target_pred_rf),
+    'precision': precision_score(target_test, target_pred_rf, average='weighted'),
+    'f1_score': f1_score(target_test, target_pred_rf, average='weighted')
+}
+
+# Model 4: Random Forest (RandomizedSearchCV)
+print("Evaluating Model 4: Random Forest (RandomizedSearchCV)...")
+target_pred_rf_random = random_rf.predict(features_test)
+results['Random Forest (Random)'] = {
+    'predictions': target_pred_rf_random,
+    'accuracy': accuracy_score(target_test, target_pred_rf_random),
+    'precision': precision_score(target_test, target_pred_rf_random, average='weighted'),
+    'f1_score': f1_score(target_test, target_pred_rf_random, average='weighted')
+}
+
+# Display the results of the analysis
+print("\n✓ All models evaluated!\n")
+print("="*70)
+print("PERFORMANCE COMPARISON - TEST SET RESULTS")
+print("="*70)
+print(f"\n{'Model':<35} {'Accuracy':<15} {'Precision':<15} {'F1-Score':<15}")
+print("-"*70)
+
+for model_name, metrics in results.items():
+    print(f"{model_name:<35} {metrics['accuracy']:<15.4f} {metrics['precision']:<15.4f} {metrics['f1_score']:<15.4f}")
+
+print("="*70)
+
+# Find best model based on accuracy
+best_model_name = max(results, key=lambda x: results[x]['accuracy'])
+best_accuracy = results[best_model_name]['accuracy']
+
+print(f"\n BEST MODEL: {best_model_name}")
+print(f"   Accuracy: {best_accuracy:.4f}")
+print(f"   Precision: {results[best_model_name]['precision']:.4f}")
+print(f"   F1-Score: {results[best_model_name]['f1_score']:.4f}")
+print("="*70)
+
+# Get predictions from best model
+best_predictions = results[best_model_name]['predictions']
+
+# Calculate confusion matrix
+cm = confusion_matrix(target_test, best_predictions)
+
+# Create confusion matrix plot
+plt.figure(figsize=(12, 10))
+sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', 
+            xticklabels=sorted(target_test.unique()),
+            yticklabels=sorted(target_test.unique()),
+            cbar_kws={'label': 'Number of Predictions'})
+
+plt.xlabel('Predicted Step', fontsize=12, fontweight='bold')
+plt.ylabel('Actual Step', fontsize=12, fontweight='bold')
+plt.title(f'Confusion Matrix: {best_model_name}\nAccuracy: {best_accuracy:.4f}', 
+          fontsize=14, fontweight='bold', pad=20)
+plt.tight_layout()
+
+##########################################################
+# STEP 6: Stacked Model Performance Analysis 
+##########################################################
+
+
 # Show all figures at once
-plt.show()
+plt.show(block=False)
+input("Press Enter to exit and close all plots...")
+plt.close('all')
 
 
 
