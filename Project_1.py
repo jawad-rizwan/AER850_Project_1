@@ -11,7 +11,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import Pipeline
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.svm import SVC
-from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.svm import SVC
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import (accuracy_score, precision_score, f1_score, 
                              confusion_matrix, classification_report)
@@ -182,26 +182,26 @@ print(f"Best Score: {grid_lr.best_score_:.4f}")
 print(f"Best Parameters: {grid_lr.best_params_}")
 print(f"Training Time: {lr_time:.2f} seconds\n")
 
-# ==================== MODEL 2: GRADIENT BOOSTING (GridSearchCV) ====================
 
-# Create pipeline for Gradient Boosting
-pipeline_gbm = Pipeline([
+# ==================== MODEL 2: SUPPORT VECTOR MACHINE (GridSearchCV) ====================
+
+# Create pipeline for SVM
+pipeline_svm = Pipeline([
     ('scaler', StandardScaler()),
-    ('model', GradientBoostingClassifier(random_state=42))
+    ('model', SVC(random_state=42))
 ])
 
-# Define hyperparameter grid for Gradient Boosting
-param_grid_gbm = {
-    'model__n_estimators': [50, 100, 200],
-    'model__learning_rate': [0.01, 0.1, 0.2],
-    'model__max_depth': [3, 5, 7],
-    'model__subsample': [0.8, 1.0]
+# Define hyperparameter grid for SVM
+param_grid_svm = {
+    'model__C': [0.01, 0.1, 1, 10, 100],
+    'model__kernel': ['linear', 'rbf', 'poly'],
+    'model__gamma': ['scale', 'auto']
 }
 
-# GridSearchCV for Gradient Boosting with 5-fold cross-validation
-grid_gbm = GridSearchCV(
-    estimator=pipeline_gbm,
-    param_grid=param_grid_gbm,
+# GridSearchCV for SVM with 5-fold cross-validation
+grid_svm = GridSearchCV(
+    estimator=pipeline_svm,
+    param_grid=param_grid_svm,
     cv=5,
     scoring='accuracy',
     n_jobs=-1,
@@ -211,16 +211,16 @@ grid_gbm = GridSearchCV(
 )
 
 # Train the model
-print("\nTraining Gradient Boosting with GridSearchCV...")
+print("\nTraining Support Vector Machine with GridSearchCV...")
 start_time = time.time()
-grid_gbm.fit(features_train, target_train)
-gbm_time = time.time() - start_time
+grid_svm.fit(features_train, target_train)
+svm_time = time.time() - start_time
 
 # Confirmation message
 print(f"\n✓ Training complete!")
-print(f"Best Score: {grid_gbm.best_score_:.4f}")
-print(f"Best Parameters: {grid_gbm.best_params_}")
-print(f"Training Time: {gbm_time:.2f} seconds\n")
+print(f"Best Score: {grid_svm.best_score_:.4f}")
+print(f"Best Parameters: {grid_svm.best_params_}")
+print(f"Training Time: {svm_time:.2f} seconds\n")
 
 # ==================== MODEL 3: RANDOM FOREST (GridSearchCV) ====================
 
@@ -329,14 +329,14 @@ results['Logistic Regression'] = {
     'f1_score': f1_score(target_test, y_pred_lr, average='weighted')
 }
 
-# Model 2: Gradient Boosting
-print("Evaluating Model 2: Gradient Boosting...")
-y_pred_gbm = grid_gbm.predict(features_test)
-results['Gradient Boosting'] = {
-    'predictions': y_pred_gbm,
-    'accuracy': accuracy_score(target_test, y_pred_gbm),
-    'precision': precision_score(target_test, y_pred_gbm, average='weighted'),
-    'f1_score': f1_score(target_test, y_pred_gbm, average='weighted')
+# Model 2: Support Vector Machine (SVM)
+print("Evaluating Model 2: Support Vector Machine (SVM)...")
+y_pred_svm = grid_svm.predict(features_test)
+results['Support Vector Machine (SVM)'] = {
+    'predictions': y_pred_svm,
+    'accuracy': accuracy_score(target_test, y_pred_svm),
+    'precision': precision_score(target_test, y_pred_svm, average='weighted'),
+    'f1_score': f1_score(target_test, y_pred_svm, average='weighted')
 }
 
 # Model 3: Random Forest (GridSearchCV)
@@ -418,15 +418,15 @@ print("="*70)
 # Create stacking classifier
 stacked_model = StackingClassifier(
     estimators=[
-        ('gradient_boosting', grid_gbm.best_estimator_),
+    ('svm', grid_svm.best_estimator_),
         ('random_forest', grid_rf.best_estimator_)
     ],
     final_estimator=LogisticRegression(random_state=42, max_iter=1000),
     cv=5  # 5-fold cross-validation for training the meta-model
 )
 
-# Train the stacked model
-print("Training stacked model (Gradient Boosting + Random Forest)...")
+ # Train the stacked model
+print("Training stacked model (SVM + Random Forest)...")
 start_time = time.time()
 stacked_model.fit(features_train, target_train)
 stacked_time = time.time() - start_time
