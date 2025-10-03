@@ -1,3 +1,34 @@
+# =============================================================
+# AER 850 Project 1: Maintenance Step Classification from 3D Coordinates
+# Name: Jawad Rizwan
+# Student Number: 501124033
+# Due Date: October 6th, 2025
+# -------------------------------------------------------------
+# This script loads a dataset of 3D coordinates (X, Y, Z) and their
+# associated maintenance steps, performs data analysis,
+# visualizes the data, and builds several machine learning models
+# to classify the maintenance step based on the coordinates.
+#
+# Libraries and Tools Used:
+# - pandas: For data loading, cleaning, and manipulation.
+# - matplotlib & seaborn: For data visualization (3D plots, histograms, heatmaps).
+# - scikit-learn: For model building, pipelines, and evaluation.
+#   - GridSearchCV: Exhaustive hyperparameter tuning for best model selection.
+#   - RandomizedSearchCV: Efficient random hyperparameter search for large grids.
+#   - Pipelines: Combine preprocessing (scaling) and modeling for reproducibility.
+#   - StackingClassifier: Ensemble learning by combining SVM and Random Forest.
+#
+# Workflow:
+# 1. Data Processing: Load and inspect the dataset using pandas.
+# 2. Data Visualization: 3D scatter, histograms, pairwise plots with matplotlib/seaborn.
+# 3. Correlation Analysis: Compute and plot feature correlations.
+# 4. Model Development: Train/test split, hyperparameter tuning (GridSearchCV, RandomizedSearchCV), and
+#    training of Logistic Regression, SVM, and Random Forest models using scikit-learn pipelines.
+# 5. Model Evaluation: Evaluate and compare models on test data.
+# 6. Stacked Model: Combine SVM and Random Forest in a stacking ensemble.
+# 7. Output: Print performance metrics and predictions in a readable format.
+# =============================================================
+
 # Import necessary libraries for the code
 import os
 import numpy as np
