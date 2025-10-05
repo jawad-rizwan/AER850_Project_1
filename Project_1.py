@@ -42,7 +42,6 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import Pipeline
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.svm import SVC
-from sklearn.svm import SVC
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import (accuracy_score, precision_score, f1_score, 
                              confusion_matrix, classification_report)
@@ -68,6 +67,9 @@ data = pd.read_csv("Project 1 Data.csv")
 
 # Display basic information about the dataframe
 print(data.info())
+
+# Display first few rows of the dataframe  
+print("\n", data.head())
 
 ##########################################################
 # STEP 2: Data Visualization
