@@ -507,8 +507,8 @@ print("STEP 7: Model Evaluation ")
 print("="*70)
 
 # Package the stacked model 
-joblib.dump(stacked_model, 'stacked_model.joblib')
-loaded_model = joblib.load('stacked_model.joblib')
+joblib.dump(stacked_model, 'SVM.joblib')
+loaded_model = joblib.load('SVM.joblib')
 
 # Coordinates for evaluation
 Eval_Coordinates = [
